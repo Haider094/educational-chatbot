@@ -13,6 +13,9 @@ RUN pip install --upgrade pip
 # Install any needed packages specified in requirements.txt
 RUN pip install --no-cache-dir -r requirements.txt
 
+# Create cache directory
+RUN mkdir -p /app/cache
+
 # Copy the application code to the working directory
 COPY app/ /app/app
 
@@ -24,4 +27,4 @@ EXPOSE 8080
 
 # Define the entry point for the Docker container
 # CMD ["python", "app/main.py"]
-CMD ["gunicorn", "--bind", "0.0.0.0:8080", "app.main:app"]
+CMD ["gunicorn", "--bind", "0.0.0.0:8080", "--timeout", "250", "app.main:app"]

@@ -1,17 +1,25 @@
 from transformers import AutoTokenizer, AutoModelForCausalLM
 import torch
+import os
 
-# falcon_model = "/model_files/falcon_model_files/"
+# Define the cache directory
+cache_dir = "./cache"
+
+# Create the cache directory if it doesn't exist
+os.makedirs(cache_dir, exist_ok=True)
+
 falcon_model = "tiiuae/falcon-7b-instruct"
-tokenizer = AutoTokenizer.from_pretrained(falcon_model)
+
+# Load the tokenizer and model with the cache directory
+tokenizer = AutoTokenizer.from_pretrained(falcon_model, cache_dir=cache_dir)
 model = AutoModelForCausalLM.from_pretrained(
     falcon_model,
     torch_dtype=torch.bfloat16,
     trust_remote_code=True,
     device_map="auto",
-    offload_folder="./OffloadFolder"
+    offload_folder="./OffloadFolder",
+    cache_dir=cache_dir  # Use cache directory
 )
-
 
 def generate_response(user_input):
     prompt = f"You (User): {user_input}\nEduBot:"
