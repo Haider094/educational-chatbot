@@ -27,4 +27,5 @@ EXPOSE 8080
 
 # Define the entry point for the Docker container
 # CMD ["python", "app/main.py"]
-CMD ["gunicorn", "--bind", "0.0.0.0:8080", "--timeout", "250", "app.main:app"]
+# Use eventlet worker
+CMD ["gunicorn", "--bind", "0.0.0.0:8080", "--timeout", "250", "--worker-class", "eventlet", "app.main:app"]
