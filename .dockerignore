@@ -1,0 +1,20 @@
+# Ignore the Dockerfile itself
+Dockerfile
+
+# Ignore Python cache files
+__pycache__/
+*.py[cod]
+*.pyo
+
+# Ignore virtual environments
+venv/
+env/
+
+# Ignore any system files
+.DS_Store
+*.swp
+
+# Ignore logs or temporary files
+*.log
+tmp/
+
