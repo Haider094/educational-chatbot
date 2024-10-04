@@ -1,10 +1,7 @@
 from transformers import AutoTokenizer, AutoModelForSequenceClassification
 
-# Load your fine-tuned model for classification
-model_path = './model_files'
-
-tokenizer = AutoTokenizer.from_pretrained(model_path)
-model = AutoModelForSequenceClassification.from_pretrained(model_path)
+tokenizer = AutoTokenizer.from_pretrained("haider0941/distilbert-base-educationl")
+model = AutoModelForSequenceClassification.from_pretrained("haider0941/distilbert-base-educationl")
 
 
 def classify_prompt(prompt):
