@@ -24,5 +24,4 @@ EXPOSE 8080
 
 # Define the entry point for the Docker container
 # CMD ["python", "app/main.py"]
-CMD ["gunicorn", "0.0.0.0:8080", "app/main.py"]
-
+CMD ["gunicorn", "--bind", "0.0.0.0:8080", "app.main:app"]
