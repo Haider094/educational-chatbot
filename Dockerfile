@@ -15,7 +15,6 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy the application code to the working directory
 COPY app/ /app/app
-COPY model_files/ /app/model_files
 
 # Set the PYTHONPATH environment variable so the app/ is treated as a module
 ENV PYTHONPATH /app
