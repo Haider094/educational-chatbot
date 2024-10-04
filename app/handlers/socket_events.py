@@ -1,6 +1,6 @@
 from flask_socketio import emit
-from models.classifier import classify_prompt
-from models.falcon_model import generate_response  # Import from gpt2_model
+from app.models.classifier import classify_prompt
+from app.models.falcon_model import generate_response  # Import from gpt2_model
 import json
 from datetime import datetime, timedelta
 from flask import request
