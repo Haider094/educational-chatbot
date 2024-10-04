@@ -1,6 +1,6 @@
 from flask import Flask
 from flask_socketio import SocketIO
-from handlers.socket_events import register_socket_events
+from .handlers.socket_events import register_socket_events
 
 # Initialize Flask and SocketIO
 app = Flask(__name__)
