@@ -4,7 +4,7 @@ from .handlers.socket_events import register_socket_events
 
 # Initialize Flask and SocketIO
 app = Flask(__name__)
-socketio = SocketIO(app, cors_allowed_origins="*")  # Allow CORS for testing
+socketio = SocketIO(app, cors_allowed_origins="*", ping_timeout=60, ping_interval=25)  
 
 # Register SocketIO events
 register_socket_events(socketio)
