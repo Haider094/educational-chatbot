@@ -1,6 +1,8 @@
 import requests
-import os
 from dotenv import load_dotenv
+import os
+
+load_dotenv() 
 
 HF_API_URL = "https://api-inference.huggingface.co/models/tiiuae/falcon-7b-instruct"  # Falcon model URL
 HF_API_TOKEN = os.getenv("HF_API_TOKEN") 
@@ -32,4 +34,3 @@ def generate_response(user_input):
     else:
         return f"Error: {response.status_code}, {response.text}"
 
-generate_response("what is ai")
