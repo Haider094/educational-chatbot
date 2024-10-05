@@ -1,29 +1,34 @@
-from transformers import AutoTokenizer, AutoModelForCausalLM
-import torch
+import requests
 import os
+from dotenv import load_dotenv
 
-# Define the cache directory
-cache_dir = "./cache"
-
-# Create the cache directory if it doesn't exist
-os.makedirs(cache_dir, exist_ok=True)
-
-falcon_model = "tiiuae/falcon-7b-instruct"
-
-# Load the tokenizer and model with the cache directory
-tokenizer = AutoTokenizer.from_pretrained(falcon_model, cache_dir=cache_dir)
-model = AutoModelForCausalLM.from_pretrained(
-    falcon_model,
-    torch_dtype=torch.bfloat16,
-    trust_remote_code=True,
-    device_map="auto",
-    offload_folder="./OffloadFolder",
-    cache_dir=cache_dir  # Use cache directory
-)
+HF_API_URL = "https://api-inference.huggingface.co/models/tiiuae/falcon-7b-instruct"  # Falcon model URL
+HF_API_TOKEN = os.getenv("HF_API_TOKEN") 
 
 def generate_response(user_input):
-    prompt = f"You (User): {user_input}\nEduBot:"
-    inputs = tokenizer(prompt, return_tensors="pt")
-    outputs = model.generate(**inputs, max_length=1000, do_sample=True, top_k=10)
-    response = tokenizer.decode(outputs[0], skip_special_tokens=True).split("EduBot:")[-1].strip()
-    return response
+    headers = {
+        "Authorization": f"Bearer {HF_API_TOKEN}",
+        "Content-Type": "application/json",
+    }
+    payload = {
+        "inputs": f"You are an AI assistant. Answer the following question: {user_input}",
+        "options": {
+            "use_cache": False
+        }
+    }
+    
+    response = requests.post(HF_API_URL, headers=headers, json=payload)
+    
+    if response.status_code == 200:
+        output = response.json()
+        # print("Raw output:", output)  # Print entire response for debugging
+        if isinstance(output, list) and len(output) > 0:
+            generated_text = output[0]['generated_text'].strip()
+            answer_start_index = generated_text.lower().find("answer the following question:") + len("answer the following question:")
+            answer = generated_text[answer_start_index:].strip()
+            return answer
+        else:
+            return "I'm sorry, I couldn't generate a response."
+    else:
+        return f"Error: {response.status_code}, {response.text}"
+
