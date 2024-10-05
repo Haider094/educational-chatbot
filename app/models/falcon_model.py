@@ -32,3 +32,4 @@ def generate_response(user_input):
     else:
         return f"Error: {response.status_code}, {response.text}"
 
+generate_response("what is ai")
