@@ -1,3 +1,4 @@
+import logging
 from flask import Flask
 from flask_socketio import SocketIO
 from .handlers.socket_events import register_socket_events
@@ -5,6 +6,10 @@ from .handlers.socket_events import register_socket_events
 # Initialize Flask and SocketIO
 app = Flask(__name__)
 socketio = SocketIO(app, cors_allowed_origins="*", ping_timeout=60, ping_interval=25)  
+
+# Set up logging
+logging.basicConfig(level=logging.INFO)  # Set logging level
+logger = logging.getLogger()
 
 # Register SocketIO events
 register_socket_events(socketio)

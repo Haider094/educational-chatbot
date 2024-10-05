@@ -1,9 +1,14 @@
 from flask_socketio import emit
 from app.models.classifier import classify_prompt
-from app.models.falcon_model import generate_response  # Import from gpt2_model
+from app.models.falcon_model import generate_response
 import json
 from datetime import datetime, timedelta
 from flask import request
+import logging
+
+# Create a logger instance
+logger = logging.getLogger()
+
 # Dictionary to store user states
 user_sessions = {}
 SESSION_TIMEOUT = timedelta(minutes=20)  # Set session timeout to 20 minutes
@@ -11,7 +16,8 @@ SESSION_TIMEOUT = timedelta(minutes=20)  # Set session timeout to 20 minutes
 def register_socket_events(socketio):
     @socketio.on('connect')
     def handle_connect():
-        print('Client connected')
+        user_id = request.sid  # Use session ID as a unique user ID
+        logger.info('User connected: %s', user_id)  # Log user connection
         emit('message', {'data': 'Connected to EduBot! Ask me any educational question.'})
 
     @socketio.on('message')
@@ -26,6 +32,9 @@ def register_socket_events(socketio):
         user_id = data.get('user_id')
         user_input = data.get('message')
 
+        # Log the message received from the user
+        logger.info('Message received from user %s: %s', user_id, user_input)
+
         # Initialize user session if not already present
         if user_id not in user_sessions:
             user_sessions[user_id] = {
@@ -37,7 +46,7 @@ def register_socket_events(socketio):
             if datetime.utcnow() - user_sessions[user_id]["last_activity"] > SESSION_TIMEOUT:
                 # Clear history if session has expired
                 user_sessions[user_id]["history"] = []
-                print(f"Session for user {user_id} has expired. History cleared.")
+                logger.info("Session for user %s has expired. History cleared.", user_id)
 
         # Update last activity time
         user_sessions[user_id]["last_activity"] = datetime.utcnow()
@@ -69,13 +78,15 @@ def register_socket_events(socketio):
         if len(user_sessions[user_id]["history"]) > 10:  # Arbitrary limit
             user_sessions[user_id]["history"] = user_sessions[user_id]["history"][-10:]
 
+        # Log the response sent to the user
+        logger.info('Response sent to user %s: %s', user_id, response)
+
         # Send response back to the specific user
         emit('response', {'user_id': user_id, 'data': response})
 
     @socketio.on('disconnect')
     def handle_disconnect():
-        print('Client disconnected')
-        # Optional: Clean up user session but keep user ID
         user_id = request.sid  # Assuming `request.sid` identifies the user
+        logger.info('User disconnected: %s', user_id)  # Log user disconnection
         if user_id in user_sessions:
             del user_sessions[user_id]["history"]
