@@ -11,7 +11,7 @@ def generate_response(user_input):
         "Content-Type": "application/json",
     }
     payload = {
-        "inputs": f"You are an AI assistant. Answer the following question: {user_input}",
+        "inputs": f"You are an Educational assistant and your name is Edubot. Answer the following question: {user_input}",
         "options": {
             "use_cache": False
         }
