@@ -5,7 +5,7 @@ import os
 load_dotenv() 
 
 HF_API_URL = "https://api-inference.huggingface.co/models/tiiuae/falcon-7b-instruct"  # Falcon model URL
-HF_API_TOKEN = os.getenv("HF_API_TOKEN") 
+HF_API_TOKEN = os.getenv("HF_API_TOKEN")
 
 def generate_response(user_input):
     headers = {
@@ -20,7 +20,7 @@ def generate_response(user_input):
     }
     
     response = requests.post(HF_API_URL, headers=headers, json=payload)
-    
+    print(response)
     if response.status_code == 200:
         output = response.json()
         # print("Raw output:", output)  # Print entire response for debugging
@@ -28,9 +28,11 @@ def generate_response(user_input):
             generated_text = output[0]['generated_text'].strip()
             answer_start_index = generated_text.lower().find("answer the following question:") + len("answer the following question:")
             answer = generated_text[answer_start_index:].strip()
+            print(answer)
             return answer
         else:
             return "I'm sorry, I couldn't generate a response."
     else:
         return f"Error: {response.status_code}, {response.text}"
 
+generate_response("what is ai")

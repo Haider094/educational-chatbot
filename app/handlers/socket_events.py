@@ -18,7 +18,10 @@ def register_socket_events(socketio):
     def handle_connect():
         user_id = request.sid  # Use session ID as a unique user ID
         logger.info('User connected: %s', user_id)  # Log user connection
-        emit('message', {'data': 'Connected to EduBot! Ask me any educational question.'})
+        
+        # Send response back when connection is established
+        emit('response', {'data': 'Connection established with EduBot!'})
+        emit('message', {'data': 'Connected to EduBot!'})
 
     @socketio.on('message')
     def handle_message(data):
@@ -88,5 +91,9 @@ def register_socket_events(socketio):
     def handle_disconnect():
         user_id = request.sid  # Assuming `request.sid` identifies the user
         logger.info('User disconnected: %s', user_id)  # Log user disconnection
+
+        # Send response back when the user disconnects
+        emit('response', {'data': 'User disconnected from EduBot!'})
+
         if user_id in user_sessions:
-            del user_sessions[user_id]["history"]
+            del user_sessions[user_id]["history"]  # Clear the user's session history
