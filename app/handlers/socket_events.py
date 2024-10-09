@@ -54,7 +54,7 @@ def register_socket_events(socketio):
             response = predefined_responses[user_input.lower()]
         else:
             # Call the generate_response function and pass the user ID
-            response = generate_response(user_id, user_input)
+            response = generate_response(user_input)
 
         # Log the response sent to the user
         logger.info('Response sent to user %s: %s', user_id, response)
