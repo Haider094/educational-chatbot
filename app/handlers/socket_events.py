@@ -20,7 +20,6 @@ def register_socket_events(socketio):
         logger.info('User connected: %s', user_id)  # Log user connection
         
         # Send response back when connection is established
-        emit('response', {'data': 'Connection established with EduBot!'})
         emit('message', {'data': 'Connected to EduBot!'})
 
     @socketio.on('message')
@@ -41,14 +40,13 @@ def register_socket_events(socketio):
         # Initialize user session if not already present
         if user_id not in user_sessions:
             user_sessions[user_id] = {
-                "history": [],
+                "history": [],  # Store only the last query and response
                 "last_activity": datetime.utcnow()  # Track last activity time
             }
         else:
             # Check if the session has expired
             if datetime.utcnow() - user_sessions[user_id]["last_activity"] > SESSION_TIMEOUT:
-                # Clear history if session has expired
-                user_sessions[user_id]["history"] = []
+                user_sessions[user_id]["history"] = []  # Clear the history if session expired
                 logger.info("Session for user %s has expired. History cleared.", user_id)
 
         # Update last activity time
@@ -64,28 +62,20 @@ def register_socket_events(socketio):
         if user_input.lower() in predefined_responses:
             response = predefined_responses[user_input.lower()]
         else:
-            classification = classify_prompt(user_input)
-            if classification == "noneducational":
-                response = "Apologies, but I am here to assist with educational inquiries only."
-            else:
-                # Include the history in the prompt
-                history = user_sessions[user_id]["history"]
-                context = " ".join(history)
-                response = generate_response(f"{context} {user_input}")
+            # Retrieve only the last query and response from the history
+            history = user_sessions[user_id]["history"][-2:] if len(user_sessions[user_id]["history"]) >= 2 else []
+            context = " ".join(history)  # Use only the last query-response pair
+            response = generate_response(f"{context} {user_input}")
 
-        # Save the new message and response to the history
-        user_sessions[user_id]["history"].append(user_input)
-        user_sessions[user_id]["history"].append(response)
-
-        # Optional: Limit the history size to prevent overflow
-        if len(user_sessions[user_id]["history"]) > 10:  # Arbitrary limit
-            user_sessions[user_id]["history"] = user_sessions[user_id]["history"][-10:]
+        # Save the new message and response, but keep only the last pair
+        user_sessions[user_id]["history"] = [user_input, response]  # Keep only the current pair
 
         # Log the response sent to the user
         logger.info('Response sent to user %s: %s', user_id, response)
 
         # Send response back to the specific user
         emit('response', {'user_id': user_id, 'data': response})
+
 
     @socketio.on('disconnect')
     def handle_disconnect():

@@ -13,7 +13,7 @@ def generate_response(user_input):
         "Content-Type": "application/json",
     }
     payload = {
-        "inputs": f"You are an Educational assistant and your name is Edubot. Answer the following question: {user_input}",
+        "inputs": f"Answer the following educational question directly without repeating the question: {user_input}",
         "options": {
             "use_cache": False
         }
@@ -23,11 +23,17 @@ def generate_response(user_input):
     print(response)
     if response.status_code == 200:
         output = response.json()
-        # print("Raw output:", output)  # Print entire response for debugging
         if isinstance(output, list) and len(output) > 0:
             generated_text = output[0]['generated_text'].strip()
+
+            # Find and clean up any leftover question text
             answer_start_index = generated_text.lower().find("answer the following question:") + len("answer the following question:")
             answer = generated_text[answer_start_index:].strip()
+
+            # If there's no "answer the following" phrase, just return the response directly
+            if answer == generated_text:
+                return generated_text
+
             print(answer)
             return answer
         else:
@@ -35,4 +41,3 @@ def generate_response(user_input):
     else:
         return f"Error: {response.status_code}, {response.text}"
 
-generate_response("what is ai")
