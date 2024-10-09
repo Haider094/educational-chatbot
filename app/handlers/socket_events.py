@@ -1,5 +1,6 @@
 from flask_socketio import emit
 from app.models.falcon_model import generate_response
+from app.models.classifier import classify_prompt  # Import the classification function
 import json
 from flask import request
 import logging
@@ -20,7 +21,6 @@ def register_socket_events(socketio):
         if user_id not in user_sessions:
             user_sessions[user_id] = {
                 "history": [],  # You can keep this if needed
-                # You can add more session data if needed
             }
 
         # Send response back when connection is established
@@ -53,8 +53,15 @@ def register_socket_events(socketio):
         if user_input.lower() in predefined_responses:
             response = predefined_responses[user_input.lower()]
         else:
-            # Call the generate_response function and pass the user ID
-            response = generate_response(user_input)
+            # Classify the user input as educational or non-educational
+            classification = classify_prompt(user_input)
+
+            if classification == "educational":
+                # Call the generate_response function to handle educational queries
+                response = generate_response(user_input)
+            else:
+                # If the input is non-educational, send an appropriate response
+                response = "Apologies! I can only answer to the educational queries. Please ask me something related to education."
 
         # Log the response sent to the user
         logger.info('Response sent to user %s: %s', user_id, response)
@@ -67,9 +74,10 @@ def register_socket_events(socketio):
         user_id = request.sid  # Assuming `request.sid` identifies the user
         logger.info('User disconnected: %s', user_id)  # Log user disconnection
 
-        # You may want to clean up user session here if needed
+        # Clean up user session data if needed
         if user_id in user_sessions:
-            del user_sessions[user_id]  # Clean up user session data
+            del user_sessions[user_id]
 
         # Send response back when the user disconnects
         emit('response', {'data': 'User disconnected from EduBot!'})
+
