@@ -3,6 +3,7 @@ from flask import Flask
 from flask_socketio import SocketIO
 from .handlers.socket_events import register_socket_events
 import os
+import json
 
 # Initialize Flask and SocketIO
 app = Flask(__name__)
@@ -13,10 +14,7 @@ socketio = SocketIO(
     ping_interval=25,
     engineio_logger=True,
     logger=True,
-    async_mode='eventlet',
-    json=json,
-    always_connect=True,
-    namespaces=['/']
+    async_mode='eventlet'
 )
 
 # Set up logging
@@ -32,3 +30,6 @@ app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'your_secret_key')
 
 # Register SocketIO events
 register_socket_events(socketio)
+
+if __name__ == '__main__':
+    socketio.run(app, host='0.0.0.0', port=8080, debug=False)
