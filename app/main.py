@@ -13,7 +13,10 @@ socketio = SocketIO(
     ping_interval=25,
     engineio_logger=True,
     logger=True,
-    async_mode='eventlet'
+    async_mode='eventlet',
+    json=json,
+    always_connect=True,
+    namespaces=['/']
 )
 
 # Set up logging

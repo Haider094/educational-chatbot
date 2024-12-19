@@ -39,14 +39,14 @@ def register_socket_events(socketio):
                     "history": [],
                 }
 
-            emit('message', {'data': 'Connected to EduBot!'})
+            emit('connection_response', {'status': 'success', 'message': 'Connected to EduBot!'})
             return True
             
         except Exception as e:
             logger.error(f"Connection error: {str(e)}")
             return False
 
-    @socketio.on('message')
+    @socketio.on('chat_message')
     def handle_message(data):
         try:
             logger.info(f"Received message: {data}")
@@ -55,14 +55,14 @@ def register_socket_events(socketio):
                 try:
                     data = json.loads(data)
                 except json.JSONDecodeError:
-                    emit('error', {'data': 'Invalid JSON format'})
+                    emit('error', {'status': 'error', 'message': 'Invalid JSON format'})
                     return
 
             user_id = data.get('user_id')
             user_input = data.get('message')
 
             if not user_id or not user_input:
-                emit('error', {'data': 'Missing user_id or message'})
+                emit('error', {'status': 'error', 'message': 'Missing user_id or message'})
                 return
 
             logger.info(f'Message from user {user_id}: {user_input}')
@@ -86,11 +86,15 @@ def register_socket_events(socketio):
                     response = "Please ask an educational question."
 
             logger.info(f'Response to user {user_id}: {response}')
-            emit('response', {'user_id': user_id, 'data': response})
+            emit('chat_response', {
+                'status': 'success',
+                'user_id': user_id,
+                'message': response
+            })
 
         except Exception as e:
             logger.error(f"Message handling error: {str(e)}")
-            emit('error', {'data': 'Internal server error'})
+            emit('error', {'status': 'error', 'message': 'Internal server error'})
 
     @socketio.on('disconnect')
     def handle_disconnect():
