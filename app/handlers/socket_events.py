@@ -2,8 +2,9 @@ from flask_socketio import emit
 from app.models.falcon_model import generate_response
 from app.models.classifier import classify_prompt  # Import the classification function
 import json
-from flask import request
+from flask import request, current_app
 import logging
+import jwt
 
 # Create a logger instance
 logger = logging.getLogger()
@@ -11,10 +12,25 @@ logger = logging.getLogger()
 # Dictionary to store user sessions
 user_sessions = {}
 
+def validate_token(token):
+    try:
+        decoded = jwt.decode(token, current_app.config['SECRET_KEY'], algorithms=["HS256"])
+        return decoded
+    except jwt.ExpiredSignatureError:
+        return None
+    except jwt.InvalidTokenError:
+        return None
+
 def register_socket_events(socketio):
     @socketio.on('connect')
-    def handle_connect(user_id):
+    def handle_connect():
+        token = request.args.get('token')
         user_id = request.args.get('user_id')  # Get user ID from the connection request
+
+        if not token or not validate_token(token):
+            logger.warning('Unauthorized connection attempt')
+            return False  # Reject the connection
+
         logger.info('User connected: %s', user_id)  # Log user connection
 
         # Initialize a session for the user if not already present
