@@ -10,6 +10,12 @@ COPY requirements.txt .
 # Upgrade pip
 RUN pip install --upgrade pip
 
+# Install Rust and Cargo
+RUN apt-get update && apt-get install -y \
+    curl \
+    && curl https://sh.rustup.rs -sSf | sh -s -- -y \
+    && . $HOME/.cargo/env
+
 # Install any needed packages specified in requirements.txt
 RUN pip install --no-cache-dir -r requirements.txt
 
