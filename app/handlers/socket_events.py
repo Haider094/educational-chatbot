@@ -27,7 +27,11 @@ def register_socket_events(socketio):
         token = request.args.get('token')
         user_id = request.args.get('user_id')  # Get user ID from the connection request
 
-        if not token or not validate_token(token):
+        logger.info(f"Received token: {token}")
+        decoded_token = validate_token(token)
+        logger.info(f"Decoded token: {decoded_token}")
+
+        if not token or not decoded_token:
             logger.warning('Unauthorized connection attempt')
             return False  # Reject the connection
 
