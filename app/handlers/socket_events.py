@@ -1,6 +1,7 @@
-from flask_socketio import emit
+from flask_socketio import emit, disconnect
 from app.models.falcon_model import generate_response
 from app.models.classifier import classify_prompt  # Import the classification function
+from app.utils.auth import require_token
 import json
 from flask import request
 import logging
@@ -13,7 +14,8 @@ user_sessions = {}
 
 def register_socket_events(socketio):
     @socketio.on('connect')
-    def handle_connect(user_id):
+    @require_token
+    def handle_connect():
         user_id = request.args.get('user_id')  # Get user ID from the connection request
         logger.info('User connected: %s', user_id)  # Log user connection
 
@@ -27,6 +29,7 @@ def register_socket_events(socketio):
         emit('message', {'data': 'Connected to EduBot!'})
 
     @socketio.on('message')
+    @require_token
     def handle_message(data):
         if isinstance(data, str):
             try:
