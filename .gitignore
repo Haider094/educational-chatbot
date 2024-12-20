@@ -31,3 +31,4 @@ Thumbs.db
 # VS Code
 vscode/
 venv/
+.env

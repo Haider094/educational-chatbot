@@ -10,12 +10,8 @@ COPY requirements.txt .
 # Upgrade pip
 RUN pip install --upgrade pip
 
-# Install Rust and Cargo, and ensure the environment is sourced
-RUN apt-get update && apt-get install -y \
-    curl \
-    && curl https://sh.rustup.rs -sSf | sh -s -- -y \
-    && . $HOME/.cargo/env \
-    && pip install --no-cache-dir -r requirements.txt
+# Install any needed packages specified in requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy the application code to the working directory
 COPY app/ /app/app
@@ -28,4 +24,6 @@ ENV PYTHONPATH /app
 EXPOSE 8080
 
 # Define the entry point for the Docker container
-CMD ["gunicorn", "--worker-class", "eventlet", "--workers", "1", "--bind", "0.0.0.0:8080", "--timeout", "300", "--keep-alive", "5", "--log-level", "debug", "app.main:app"]
+# CMD ["python", "app/main.py"]
+# Use eventlet worker
+CMD ["gunicorn", "--bind", "0.0.0.0:8080", "--timeout", "250", "--worker-class", "eventlet", "app.main:app"]
