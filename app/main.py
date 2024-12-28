@@ -27,8 +27,13 @@ with app.app_context():
             description="Initial admin token",
             expires_in="365d"
         )
-        print(f"\n\nInitial Admin Token Created: {initial_token}\n"
-              f"Please save this token securely!\n\n")
+        print(f"""
+==========================================================
+INITIAL ADMIN TOKEN CREATED: {initial_token}
+SAVE THIS TOKEN SECURELY!
+==========================================================
+""")
+        logger.info(f"Initial admin token created")
 
 # Register SocketIO events
 register_socket_events(socketio)
