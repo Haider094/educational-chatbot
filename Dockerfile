@@ -4,31 +4,29 @@ FROM python:3.8-slim
 # Set the working directory in the container
 WORKDIR /app
 
-# Install system dependencies and Rust
+# Install system dependencies
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
     build-essential \
+    python3-dev \
     curl \
-    && rm -rf /var/lib/apt/lists/* \
-    && curl https://sh.rustup.rs -sSf | sh -s -- -y
+    pkg-config \
+    git \
+    && rm -rf /var/lib/apt/lists/*
 
-# Add Rust to PATH
-ENV PATH="/root/.cargo/bin:${PATH}"
-
-# Copy the requirements file to the working directory
+# Copy requirements first to leverage Docker cache
 COPY requirements.txt .
 
-# Upgrade pip
-RUN pip install --upgrade pip
-
-# Install any needed packages specified in requirements.txt
-RUN pip install --no-cache-dir -r requirements.txt
+# Upgrade pip and install requirements
+RUN pip install --no-cache-dir -U pip setuptools wheel && \
+    pip install --no-cache-dir "tokenizers==0.13.3" && \
+    pip install --no-cache-dir -r requirements.txt
 
 # Copy the application code to the working directory
 COPY app/ /app/app
 COPY .env /app/.env
 
-# Set the PYTHONPATH environment variable so the app/ is treated as a module
+# Set the PYTHONPATH environment variable
 ENV PYTHONPATH /app
 
 # Expose port 8080 for the socket server
