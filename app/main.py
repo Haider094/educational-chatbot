@@ -19,18 +19,16 @@ logger = logging.getLogger()
 app.register_blueprint(token_bp, url_prefix='/api')
 app.register_blueprint(health_bp)
 
-# Create initial token if no tokens exist
-@app.before_first_request
-def create_initial_token():
-    with app.app_context():
-        tokens = token_store.list_tokens()
-        if not tokens:
-            initial_token = token_store.create_token(
-                description="Initial admin token",
-                expires_in="365d"
-            )
-            print(f"\n\nInitial Admin Token Created: {initial_token}\n"
-                  f"Please save this token securely!\n\n")
+# Initialize database within app context
+with app.app_context():
+    tokens = token_store.list_tokens()
+    if not tokens:
+        initial_token = token_store.create_token(
+            description="Initial admin token",
+            expires_in="365d"
+        )
+        print(f"\n\nInitial Admin Token Created: {initial_token}\n"
+              f"Please save this token securely!\n\n")
 
 # Register SocketIO events
 register_socket_events(socketio)
