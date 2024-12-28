@@ -32,3 +32,4 @@ Thumbs.db
 vscode/
 venv/
 .env
+API_DOCUMENTATION.md

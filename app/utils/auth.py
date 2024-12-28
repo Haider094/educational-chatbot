@@ -1,20 +1,15 @@
 from functools import wraps
 from flask_socketio import emit, disconnect
 from flask import request
-import os
-from dotenv import load_dotenv
-
-load_dotenv()
-
-API_TOKEN = os.getenv('API_TOKEN')
+from app.models.token_model import token_store
 
 def verify_token(token):
-    """Verify if the provided token matches the API token."""
+    """Verify if the provided token exists in token store."""
     if not token:
         return False, "Authentication token is missing"
-    if token != API_TOKEN:
-        return False, "Invalid authentication token"
-    return True, "Token verified"
+    if token_store.validate_token(token):
+        return True, "Token verified"
+    return False, "Invalid authentication token"
 
 def require_token(f):
     @wraps(f)
