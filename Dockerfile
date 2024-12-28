@@ -9,6 +9,8 @@ RUN apt-get update && \
     apt-get install -y --no-install-recommends \
     build-essential \
     curl \
+    cmake \
+    pkg-config \
     && rm -rf /var/lib/apt/lists/* \
     && curl https://sh.rustup.rs -sSf | sh -s -- -y
 
@@ -18,11 +20,10 @@ ENV PATH="/root/.cargo/bin:${PATH}"
 # Copy the requirements file to the working directory
 COPY requirements.txt .
 
-# Upgrade pip
-RUN pip install --upgrade pip
-
-# Install any needed packages specified in requirements.txt
-RUN pip install --no-cache-dir -r requirements.txt
+# Install Python packages in two steps
+RUN pip install --upgrade pip && \
+    pip install --no-cache-dir tokenizers==0.13.3 && \
+    pip install --no-cache-dir -r requirements.txt
 
 # Create directory for SQLite database
 RUN mkdir -p /app/data
