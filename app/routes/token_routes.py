@@ -1,44 +1,53 @@
 from flask import Blueprint, request, jsonify
-from app.models.token_model import token_store
-from app.utils.auth import require_token
-import os
+from sqlalchemy.orm import Session
+from app.models.token import Token, SessionLocal
+from datetime import datetime, timedelta
 
 token_bp = Blueprint('token', __name__)
 
-@token_bp.route('/tokens', methods=['POST'])
-@require_token
+@token_bp.route('/token', methods=['POST'])
 def create_token():
-    data = request.get_json()
-    description = data.get('description', 'No description')
-    expires_in = data.get('expires_in', '30d')  # Default to 30 days if not specified
+    token = request.json.get('token')
+    if not token:
+        return jsonify({"error": "Token is required"}), 400
     
-    try:
-        token = token_store.create_token(description, expires_in)
-        return jsonify({
-            'token': token,
-            'description': description,
-            'expires_in': expires_in
-        }), 201
-    except ValueError as e:
-        return jsonify({'error': str(e)}), 400
+    db: Session = SessionLocal()
+    new_token = Token(token=token)
+    db.add(new_token)
+    db.commit()
+    db.close()
+    
+    return jsonify({"message": "Token created successfully"}), 201
 
-@token_bp.route('/tokens', methods=['GET'])
-@require_token
-def list_tokens():
-    tokens = token_store.list_tokens()
-    return jsonify({'tokens': tokens}), 200
-
-@token_bp.route('/tokens/<token>', methods=['DELETE'])
-@require_token
+@token_bp.route('/token/<token>', methods=['DELETE'])
 def delete_token(token):
-    if token_store.delete_token(token):
-        return jsonify({'message': 'Token deleted successfully'}), 200
-    return jsonify({'error': 'Token not found'}), 404
+    db: Session = SessionLocal()
+    token_to_delete = db.query(Token).filter(Token.token == token).first()
+    if not token_to_delete:
+        db.close()
+        return jsonify({"error": "Token not found"}), 404
+    
+    db.delete(token_to_delete)
+    db.commit()
+    db.close()
+    
+    return jsonify({"message": "Token deleted successfully"}), 200
 
-@token_bp.route('/tokens/<token>', methods=['GET'])
-@require_token
-def get_token_info(token):
-    info = token_store.get_token_info(token)
-    if info:
-        return jsonify(info), 200
-    return jsonify({'error': 'Token not found'}), 404
+@token_bp.route('/token/<token>', methods=['GET'])
+def check_token(token):
+    db: Session = SessionLocal()
+    token_exists = db.query(Token).filter(Token.token == token).first()
+    db.close()
+    
+    if not token_exists:
+        return jsonify({"error": "Token not found"}), 404
+    
+    return jsonify({"message": "Token is valid"}), 200
+
+@token_bp.route('/tokens/active', methods=['GET'])
+def get_active_tokens():
+    db: Session = SessionLocal()
+    active_tokens_count = db.query(Token).filter(Token.expires_at > datetime.utcnow()).count()
+    db.close()
+    
+    return jsonify({"active_tokens_count": active_tokens_count}), 200

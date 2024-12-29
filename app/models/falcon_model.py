@@ -1,6 +1,7 @@
 import requests
 from dotenv import load_dotenv
 import os
+from requests.exceptions import RequestException, Timeout
 
 # Load environment variables
 load_dotenv()
@@ -9,7 +10,7 @@ HF_API_URL = "https://api-inference.huggingface.co/models/tiiuae/falcon-7b-instr
 HF_API_TOKEN = os.getenv("HF_API_TOKEN")
 
 def generate_response(user_input):
-    """Generates a response from the Falcon model without including the user input in the final response."""
+    """Generates a response from the Falcon model with improved error handling."""
     headers = {
         "Authorization": f"Bearer {HF_API_TOKEN}",
         "Content-Type": "application/json",
@@ -22,21 +23,23 @@ def generate_response(user_input):
         }
     }
     
-    # Send request to Falcon model
-    response = requests.post(HF_API_URL, headers=headers, json=payload)
-    if response.status_code == 200:
+    try:
+        # Changed timeout to 120 seconds (2 minutes)
+        response = requests.post(HF_API_URL, headers=headers, json=payload, timeout=120)
+        response.raise_for_status()  # Raise exception for non-200 status codes
+        
         output = response.json()
         if isinstance(output, list) and len(output) > 0:
             generated_text = output[0]['generated_text'].strip()
-
-            # Remove all text before the first newline character
             cleaned_response = generated_text.split('\n', 1)[-1].strip()
-
-            print("cleaned_response: " + cleaned_response)
-
             return cleaned_response
-        else:
-            return "I'm sorry, I couldn't generate a response."
-    else:
-        return f"Error: {response.status_code}, {response.text}"
+        
+        return "I'm sorry, I couldn't generate a response."
+        
+    except Timeout:
+        return "I'm sorry, the request timed out. Please try again."
+    except RequestException as e:
+        return f"An error occurred while processing your request: {str(e)}"
+    except Exception as e:
+        return "I apologize, but I encountered an unexpected error."
 

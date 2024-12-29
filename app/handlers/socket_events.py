@@ -5,6 +5,7 @@ from app.utils.auth import require_token
 import json
 from flask import request
 import logging
+from app.utils.rate_limiter import rate_limiter
 
 # Create a logger instance
 logger = logging.getLogger()
@@ -77,6 +78,15 @@ def register_socket_events(socketio):
                 })
                 return
 
+            # Check rate limit
+            if not rate_limiter.is_allowed(message_user_id):
+                emit('error', {
+                    'status': 429,
+                    'message': 'Rate limit exceeded. Please try again later.',
+                    'type': 'RateLimitError'
+                })
+                return
+
             # Log the message received from the user
             logger.info('Message received from user %s: %s', message_user_id, user_input)
 
@@ -120,11 +130,12 @@ def register_socket_events(socketio):
                 'type': 'ValidationError'
             })
         except Exception as e:
-            logger.error('Error processing message: %s', str(e))
+            logger.error('Error processing message: %s', str(e), exc_info=True)  # Added exc_info for better logging
             emit('error', {
                 'status': 500,
                 'message': 'Internal server error',
-                'type': 'ServerError'
+                'type': 'ServerError',
+                'error': str(e) if not isinstance(e, json.JSONDecodeError) else 'Invalid JSON format'
             })
 
     @socketio.on('disconnect')
