@@ -3,7 +3,6 @@ from app.utils.auth import generate_token, verify_token, require_token
 from app.utils.token_blacklist import token_blacklist
 import logging
 
-token_bp = Blueprint('token', __name__)
 logger = logging.getLogger(__name__)
 
 @token_bp.route('/token', methods=['POST'])
@@ -50,3 +49,5 @@ def refresh_token():
     new_token = generate_token(user_id_or_message)
     token_blacklist.add_token(old_token)
     return jsonify({'token': new_token}), 200
+
+token_bp = Blueprint('token', __name__)
