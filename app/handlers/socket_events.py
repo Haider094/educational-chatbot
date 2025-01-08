@@ -1,7 +1,7 @@
 from flask_socketio import emit, disconnect
 from app.models.falcon_model import generate_response
 from app.models.classifier import classify_prompt  # Import the classification function
-from app.utils.auth import require_token
+from app.utils.auth import require_token, verify_token
 import json
 from flask import request
 import logging

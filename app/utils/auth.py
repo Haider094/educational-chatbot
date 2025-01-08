@@ -1,29 +1,33 @@
-from functools import wraps
-from flask_socketio import emit, disconnect
-from flask import request
 import os
+import jwt
+from datetime import datetime, timedelta
+from functools import wraps
+from flask import request, jsonify
 from dotenv import load_dotenv
-from sqlalchemy.orm import Session
-from app.models.token import Token, SessionLocal
-from datetime import datetime
+from .token_blacklist import token_blacklist
 
 load_dotenv()
 
-API_TOKEN = os.getenv('API_TOKEN')
+SECRET_KEY = os.getenv('SECRET_KEY', 'your_secret_key')
+
+def generate_token(user_id, expires_in=30):
+    """Generate a JWT token."""
+    expiration = datetime.utcnow() + timedelta(days=expires_in)
+    token = jwt.encode({'user_id': user_id, 'exp': expiration}, SECRET_KEY, algorithm='HS256')
+    return token
 
 def verify_token(token):
-    """Verify if the provided token exists in the database."""
-    if not token:
-        return False, "Authentication token is missing"
+    """Verify the provided JWT token."""
+    if token_blacklist.is_token_blacklisted(token):
+        return False, "Token has been revoked"
     
-    db: Session = SessionLocal()
-    token_record = db.query(Token).filter(Token.token == token).first()
-    db.close()
-    
-    if not token_record:
-        return False, "Invalid authentication token"
-    
-    return True, "Token verified"
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=['HS256'])
+        return True, payload['user_id']
+    except jwt.ExpiredSignatureError:
+        return False, "Token has expired"
+    except jwt.InvalidTokenError:
+        return False, "Invalid token"
 
 def require_token(f):
     @wraps(f)
@@ -35,14 +39,8 @@ def require_token(f):
             if auth_header.startswith('Bearer '):
                 auth_token = auth_header.split(' ')[1]
 
-        is_valid, message = verify_token(auth_token)
+        is_valid, user_id_or_message = verify_token(auth_token)
         if not is_valid:
-            emit('error', {
-                'status': 401,
-                'message': message,
-                'type': 'AuthenticationError'
-            })
-            disconnect()
-            return False
+            return jsonify({'error': user_id_or_message}), 401
         return f(*args, **kwargs)
     return decorated

@@ -7,8 +7,6 @@ app = Flask(__name__)
 # Register the token blueprint
 app.register_blueprint(token_bp, url_prefix='/api')
 
-token_bp = Blueprint('token', __name__)
-
 @token_bp.route('/verify', methods=['POST'])
 def verify():
     data = request.get_json()
