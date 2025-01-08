@@ -16,14 +16,34 @@ connection_to_user = {}  # New dictionary to map connection IDs to user_ids
 
 def register_socket_events(socketio):
     @socketio.on('connect')
-    @require_token
     def handle_connect():
+        auth_token = request.args.get('token')
         user_id = request.args.get('user_id')
+
+        # Verify token first
+        if not auth_token:
+            emit('error', {
+                'status': 401,
+                'message': 'Authentication token is missing',
+                'type': 'AuthenticationError'
+            })
+            disconnect()
+            return False
+
+        is_valid, token_id = verify_token(auth_token)
+        if not is_valid:
+            emit('error', {
+                'status': 401,
+                'message': f'Invalid or expired token: {token_id}',
+                'type': 'AuthenticationError'
+            })
+            disconnect()
+            return False
         
         if not user_id:
             emit('error', {
                 'status': 400,
-                'message': 'User ID is required',
+                'message': 'User ID is required for connection',
                 'type': 'ValidationError'
             })
             disconnect()
@@ -34,21 +54,20 @@ def register_socket_events(socketio):
         
         logger.info('User connected: %s with connection ID: %s', user_id, connection_id)
 
-        # Initialize a session for the user if not already present
         if user_id not in user_sessions:
             user_sessions[user_id] = {
-                "history": [],  # You can keep this if needed
-                "connection_id": connection_id  # Store connection ID with session
+                "history": [],
+                "connection_id": connection_id
             }
 
         emit('connected', {
             'status': 200,
-            'message': 'Connected to EduBot!',
-            'user_id': user_id
+            'message': 'Successfully connected to EduBot!',
+            'user_id': user_id,
+            'connection_id': connection_id
         })
 
     @socketio.on('message')
-    @require_token
     def handle_message(data):
         try:
             if isinstance(data, str):
@@ -59,22 +78,28 @@ def register_socket_events(socketio):
             connection_id = request.sid
             original_user_id = connection_to_user.get(connection_id)
 
-            # Validate required fields
             if not message_user_id or not user_input:
                 emit('error', {
                     'status': 400,
-                    'message': 'Both user_id and message are required',
-                    'type': 'ValidationError'
+                    'message': 'Both user_id and message are required in the request',
+                    'type': 'ValidationError',
+                    'details': {
+                        'user_id': 'Missing' if not message_user_id else 'Present',
+                        'message': 'Missing' if not user_input else 'Present'
+                    }
                 })
                 return
 
-            # Verify user_id match
             if message_user_id != original_user_id:
                 emit('error', {
                     'status': 403,
-                    'message': 'User ID mismatch. Please use the same user ID you connected with.',
+                    'message': 'User ID mismatch detected',
                     'type': 'AuthorizationError',
-                    'expected_user_id': original_user_id
+                    'details': {
+                        'provided_user_id': message_user_id,
+                        'expected_user_id': original_user_id,
+                        'reason': 'User ID must match the ID used during connection'
+                    }
                 })
                 return
 

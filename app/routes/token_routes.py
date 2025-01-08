@@ -8,22 +8,28 @@ logger = logging.getLogger(__name__)
 
 @token_bp.route('/token', methods=['POST'])
 def create_token():
-    user_id = request.json.get('user_id')
+    token_id = request.json.get('token_id')  # Changed from user_id to token_id
     expires_in = request.json.get('expires_in', 30)  # Default expiration is 30 days
     time_unit = request.json.get('time_unit', 'days')  # Default time unit is days
 
-    if not user_id:
-        logger.error("User ID is required")
-        return jsonify({"error": "User ID is required"}), 400
+    if not token_id:
+        logger.error("Token ID is required")
+        return jsonify({"error": "Token ID is required", "status": "error"}), 400
 
     try:
-        token = generate_token(user_id, expires_in, time_unit)
+        token = generate_token(token_id, expires_in, time_unit)
     except ValueError as e:
         logger.error(str(e))
-        return jsonify({"error": str(e)}), 400
+        return jsonify({"error": str(e), "status": "error"}), 400
 
     logger.info("Token created successfully")
-    return jsonify({"token": token}), 201
+    return jsonify({
+        "status": "success",
+        "message": "Token created successfully",
+        "token": token,
+        "expires_in": expires_in,
+        "time_unit": time_unit
+    }), 201
 
 @token_bp.route('/verify', methods=['POST'])
 def verify():

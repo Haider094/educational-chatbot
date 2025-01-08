@@ -10,7 +10,7 @@ load_dotenv()
 
 SECRET_KEY = os.getenv('SECRET_KEY', 'your_secret_key')
 
-def generate_token(user_id, expires_in=30, time_unit='days'):
+def generate_token(token_id, expires_in=30, time_unit='days'):
     """Generate a JWT token."""
     if time_unit == 'minutes':
         expiration = datetime.utcnow() + timedelta(minutes=expires_in)
@@ -25,7 +25,11 @@ def generate_token(user_id, expires_in=30, time_unit='days'):
     else:
         raise ValueError("Invalid time unit. Use 'minutes', 'hours', 'days', 'months', or 'years'.")
 
-    token = jwt.encode({'user_id': user_id, 'exp': expiration}, SECRET_KEY, algorithm='HS256')
+    token = jwt.encode({
+        'token_id': token_id,
+        'exp': expiration,
+        'iat': datetime.utcnow()
+    }, SECRET_KEY, algorithm='HS256')
     return token
 
 def verify_token(token):
@@ -35,11 +39,13 @@ def verify_token(token):
     
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=['HS256'])
-        return True, payload['user_id']
+        return True, payload['token_id']
     except jwt.ExpiredSignatureError:
         return False, "Token has expired"
     except jwt.InvalidTokenError:
         return False, "Invalid token"
+    except Exception as e:
+        return False, f"Token verification failed: {str(e)}"
 
 def require_token(f):
     @wraps(f)
