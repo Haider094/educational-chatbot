@@ -1,20 +1,30 @@
-# Ignore the Dockerfile itself
-Dockerfile
-
-# Ignore Python cache files
+# Byte-compiled / optimized / DLL files
 __pycache__/
-*.py[cod]
-*.pyo
-
-# Ignore virtual environments
-venv/
+# Distribution / packaging
+.Python
 env/
+.venv
+build/
+dist/
+idea/
+vscode/
+# PyCharm
+.idea/
+.vscode/
+venv/
+.env
+API_DOCUMENTATION.md
 
-# Ignore any system files
-.DS_Store
-*.swp
 
-# Ignore logs or temporary files
-*.log
-tmp/
+
+
+
+
+
+
+
+
+
+
+
 
