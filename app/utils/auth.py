@@ -10,9 +10,21 @@ load_dotenv()
 
 SECRET_KEY = os.getenv('SECRET_KEY', 'your_secret_key')
 
-def generate_token(user_id, expires_in=30):
+def generate_token(user_id, expires_in=30, time_unit='days'):
     """Generate a JWT token."""
-    expiration = datetime.utcnow() + timedelta(days=expires_in)
+    if time_unit == 'minutes':
+        expiration = datetime.utcnow() + timedelta(minutes=expires_in)
+    elif time_unit == 'hours':
+        expiration = datetime.utcnow() + timedelta(hours=expires_in)
+    elif time_unit == 'days':
+        expiration = datetime.utcnow() + timedelta(days=expires_in)
+    elif time_unit == 'months':
+        expiration = datetime.utcnow() + timedelta(days=expires_in * 30)
+    elif time_unit == 'years':
+        expiration = datetime.utcnow() + timedelta(days=expires_in * 365)
+    else:
+        raise ValueError("Invalid time unit. Use 'minutes', 'hours', 'days', 'months', or 'years'.")
+
     token = jwt.encode({'user_id': user_id, 'exp': expiration}, SECRET_KEY, algorithm='HS256')
     return token
 

@@ -10,12 +10,18 @@ logger = logging.getLogger(__name__)
 def create_token():
     user_id = request.json.get('user_id')
     expires_in = request.json.get('expires_in', 30)  # Default expiration is 30 days
+    time_unit = request.json.get('time_unit', 'days')  # Default time unit is days
 
     if not user_id:
         logger.error("User ID is required")
         return jsonify({"error": "User ID is required"}), 400
 
-    token = generate_token(user_id, expires_in)
+    try:
+        token = generate_token(user_id, expires_in, time_unit)
+    except ValueError as e:
+        logger.error(str(e))
+        return jsonify({"error": str(e)}), 400
+
     logger.info("Token created successfully")
     return jsonify({"token": token}), 201
 
