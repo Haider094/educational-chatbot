@@ -1,11 +1,32 @@
 import logging
 from flask import Flask
 from flask_socketio import SocketIO
+from flask_cors import CORS
 from .handlers.socket_events import register_socket_events
 from . import app  # Import the app instance
 
-# Initialize Flask and SocketIO
-socketio = SocketIO(app, cors_allowed_origins="*", ping_timeout=60, ping_interval=25)  
+# Enable CORS for the Flask app
+CORS(app, resources={
+    r"/*": {
+        "origins": [
+            "https://api.educhatgpt.softgeeksdigital.com"
+        ],
+        "methods": ["GET", "POST", "OPTIONS"],
+        "allow_headers": ["Content-Type", "Authorization", "X-Requested-With"]
+    }
+})
+
+# Initialize SocketIO with expanded CORS settings
+socketio = SocketIO(
+    app,
+    cors_allowed_origins=[
+        "https://api.educhatgpt.softgeeksdigital.com"
+    ],
+    ping_timeout=60,
+    ping_interval=25,
+    logger=True,
+    engineio_logger=True
+)
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)  # Set logging level

@@ -13,8 +13,8 @@ vscode/
 .vscode/
 venv/
 .env
-API_DOCUMENTATION.md
-
+docs/
+API.md
 
 
 

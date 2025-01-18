@@ -26,7 +26,7 @@ def register_socket_events(socketio):
                 'status': 401,
                 'message': 'Authentication token is missing',
                 'type': 'AuthenticationError'
-            })
+            })  
             disconnect()
             return False
 
@@ -45,7 +45,8 @@ def register_socket_events(socketio):
                 'status': 400,
                 'message': 'User ID is required for connection',
                 'type': 'ValidationError'
-            })
+            }) 
+            
             disconnect()
             return False
 
@@ -72,6 +73,7 @@ def register_socket_events(socketio):
         try:
             if isinstance(data, str):
                 data = json.loads(data)
+            
 
             message_user_id = data.get('user_id')
             user_input = data.get('message')
