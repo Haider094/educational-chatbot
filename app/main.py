@@ -9,7 +9,8 @@ from . import app  # Import the app instance
 CORS(app, resources={
     r"/*": {
         "origins": [
-            "https://api.educhatgpt.softgeeksdigital.com"
+            "https://api.educhatgpt.softgeeksdigital.com",
+            "https://educhatgpt.softgeeksdigital.com"  # Add the client's origin
         ],
         "methods": ["GET", "POST", "OPTIONS"],
         "allow_headers": ["Content-Type", "Authorization", "X-Requested-With"]
@@ -20,7 +21,8 @@ CORS(app, resources={
 socketio = SocketIO(
     app,
     cors_allowed_origins=[
-        "https://api.educhatgpt.softgeeksdigital.com"
+        "https://api.educhatgpt.softgeeksdigital.com",
+        "https://educhatgpt.softgeeksdigital.com"  # Add the client's origin
     ],
     ping_timeout=60,
     ping_interval=25,
